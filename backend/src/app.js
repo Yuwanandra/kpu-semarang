@@ -28,7 +28,14 @@ app.use(requestId);
 app.use(helmetMiddleware);
 app.use(corsMiddleware);
 app.use(hppMiddleware);
-app.use(compression());
+// compression() dilewati saat berjalan di Vercel: dikenal bisa membuat
+// response serverless-http menggantung tanpa batas (bug interaksi stream
+// antara `compression` dan emulasi response serverless-http). Vercel sendiri
+// sudah mengompresi response secara otomatis di level edge/CDN-nya, jadi
+// tidak ada fungsi yang hilang dengan melewatinya di sana.
+if (!process.env.VERCEL) {
+  app.use(compression());
+}
 app.use(express.json({ limit: '200kb' })); // batasi ukuran body untuk mitigasi payload-flood
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(verifyOriginForMutations);
